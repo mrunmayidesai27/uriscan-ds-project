@@ -1,68 +1,252 @@
-# UriScan – Urine Test Strip Reader
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UriScan – Urine Strip Reader (DS Mini Project)</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f7f6;--card:#fff;--tx:#17302b;--mut:#5b716b;--ac:#0f8a70;--bd:#d6e0dc;--bad:#c0392b;--warn:#c98a00}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a18;--card:#18262３;--card:#182623;--tx:#e3efec;--mut:#98b0aa;--ac:#3fd1b0;--bd:#2c3f3b;--bad:#ff7b6b;--warn:#f0b43a}}
+:root[data-theme="dark"]{--bg:#101a18;--card:#182623;--tx:#e3efec;--mut:#98b0aa;--ac:#3fd1b0;--bd:#2c3f3b;--bad:#ff7b6b;--warn:#f0b43a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.45}
+header{padding:18px 16px 8px;max-width:1000px;margin:auto}
+h1{margin:0;font-size:1.5rem}h1 span{color:var(--ac)}
+header p{margin:4px 0 0;color:var(--mut);font-size:.9rem}
+nav{display:flex;gap:6px;flex-wrap:wrap;max-width:1000px;margin:8px auto;padding:0 16px}
+nav button{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 12px;border-radius:20px;cursor:pointer;font-size:.85rem}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:1000px;margin:auto;padding:0 16px 40px}
+section{display:none;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+section.on{display:block}
+h2{margin:0 0 4px;font-size:1.1rem}
+.tag{display:inline-block;font-size:.72rem;background:var(--bg);border:1px solid var(--bd);color:var(--mut);padding:1px 8px;border-radius:10px;margin:0 4px 8px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.pad{display:grid;grid-template-columns:90px 44px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)}
+.sw{width:36px;height:28px;border-radius:6px;border:1px solid var(--bd)}
+input,select,button.b{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+input[type=color]{padding:0;width:44px;height:30px}
+button.b{background:var(--ac);color:#fff;border-color:var(--ac);cursor:pointer}
+button.b.alt{background:var(--bg);color:var(--tx);border-color:var(--bd)}
+.sev0{color:var(--ac)}.sev1{color:var(--warn)}.sev2,.sev3{color:var(--bad)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.pad{grid-template-columns:76px 40px 1fr}.pad .pk{grid-column:1/-1}}
+.box{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:.8rem;overflow-x:auto;min-height:40px}
+.node{display:inline-block;border:1px solid var(--ac);border-radius:6px;padding:2px 8px;margin:2px}
+.arr{color:var(--mut)}
+table{border-collapse:collapse;width:100%;font-size:.82rem}th,td{border-bottom:1px solid var(--bd);padding:5px;text-align:left}
+canvas{max-width:100%;border:1px solid var(--bd);border-radius:8px;cursor:crosshair}
+small{color:var(--mut)}
+.scroll{overflow-x:auto}
+</style></head><body>
+<header><h1>Uri<span>Scan</span> – Urine Test Strip Reader</h1>
+<p>Colorimetry-based AI use case · Data Structures mini project (Units 1–5 mapped to real features)</p></header>
+<nav id="nav"></nav>
+<main>
 
-Colorimetry-based AI use case · Data Structures mini project (Units 1–5 mapped to real features)
+<section id="t0" class="on">
+<h2>1 · Scan strip (Colorimetry)</h2>
+<span class="tag">Unit 1: ADT, space/time complexity</span><span class="tag">Unit 4: Map ADT, Hash table</span>
+<p><small>Upload a strip photo and click a pad to sample its colour, or choose colours manually. Each colour is matched to the nearest reference colour (Euclidean distance in RGB, O(k) per pad) found via a hash table with chaining.</small></p>
+<div class="row"><input type="file" id="file" accept="image/*"><input id="pname" placeholder="Patient name" value="Patient A"><input id="pid" type="number" placeholder="ID" value="101" style="width:90px"></div>
+<canvas id="cv" width="10" height="10" style="display:none"></canvas>
+<div id="pads"></div>
+<div class="row"><button class="b" id="analyze">Analyze → add to priority queue</button><button class="b alt" id="demo">Random demo strip</button></div>
+<div id="liveRes" class="box"></div>
+</section>
 
-## 1 · Scan strip (Colorimetry)
+<section id="t1">
+<h2>2 · Priority Queue & Processing</h2>
+<span class="tag">Unit 2: Queue, Priority Queue</span><span class="tag">Unit 5: Heap</span>
+<p><small>Strips wait in a max-heap keyed by severity score, so the most critical sample is processed first.</small></p>
+<div class="row"><button class="b" id="proc">Process next (extract-max)</button><span id="qinfo"></span></div>
+<div class="box" id="qview"></div>
+</section>
 
-Unit 1: ADT, space/time complexityUnit 4: Map ADT, Hash table
+<section id="t2">
+<h2>3 · Scan History – Linked List & Undo Stack</h2>
+<span class="tag">Unit 2: Singly Linked List, Stack</span>
+<div class="grid"><div><b>History (linked list)</b>
+<div class="row"><button class="b alt" id="delHead">Delete head</button><button class="b alt" id="delTail">Delete tail</button></div>
+<div class="box" id="llview"></div></div>
+<div><b>Undo stack (LIFO)</b>
+<div class="row"><button class="b" id="undo">Undo last action</button></div>
+<div class="box" id="stview"></div></div></div>
+</section>
 
-Upload a strip photo and click a pad to sample its colour, or choose colours manually. Each colour is matched to the nearest reference colour (Euclidean distance in RGB, O(k) per pad) found via a hash table with chaining.
+<section id="t3">
+<h2>4 · Health Score – Postfix Evaluation</h2>
+<span class="tag">Unit 2: Stack applications, Infix→Postfix, Evaluation</span>
+<p><small>Letters: G=Glucose, P=Protein, K=Ketone, B=Blood, H=pH deviation, N=Nitrite (severity levels 0–3). Edit the formula; it's converted with a stack (shunting-yard) and evaluated with another stack.</small></p>
+<div class="row"><input id="formula" style="flex:1;min-width:240px" value="(G*3 + P*2) + K*2 + B*2 + N*1 + H"><button class="b" id="fbtn">Recompute</button></div>
+<div class="box" id="fout"></div>
+</section>
 
-## 2 · Priority Queue & Processing
+<section id="t4">
+<h2>5 · Patient Index – Binary Search Tree</h2>
+<span class="tag">Unit 3: BST, Traversals, Search</span><span class="tag">Unit 5: Binary search</span>
+<div class="row"><input id="sid" type="number" placeholder="Patient ID" style="width:130px"><button class="b" id="bst">BST search</button>
+<button class="b alt" id="tin">Inorder</button><button class="b alt" id="tpre">Preorder</button><button class="b alt" id="tpost">Postorder</button></div>
+<div class="box" id="tout"></div>
+<p><b>Tree shape</b> (root at top, indented)</p><pre class="box" id="tview"></pre>
+</section>
 
-Unit 2: Queue, Priority QueueUnit 5: Heap
+<section id="t5">
+<h2>6 · Condition Graph – BFS / DFS</h2>
+<span class="tag">Unit 3: Graph, adjacency list, BFS, DFS</span>
+<p><small>Abnormal pads are start nodes. Traversal finds the possible conditions linked to them (graph: pad → pathway → condition).</small></p>
+<div class="row"><button class="b" id="bfs">BFS from abnormal pads</button><button class="b alt" id="dfs">DFS from abnormal pads</button></div>
+<div class="box" id="gview"></div><div class="box" id="gout" style="margin-top:8px"></div>
+</section>
 
-Strips wait in a max-heap keyed by severity score, so the most critical sample is processed first.
+<section id="t6">
+<h2>7 · Sort & Search Records</h2>
+<span class="tag">Unit 5: Bubble, Counting, Heap sort</span>
+<div class="row"><select id="alg"><option value="bubble">Bubble sort</option><option value="counting">Counting sort</option><option value="heap">Heap sort</option></select>
+<select id="key"><option value="score">by score</option><option value="id">by ID</option></select>
+<button class="b" id="sortbtn">Sort</button><small id="sinfo"></small></div>
+<div class="scroll"><table id="stbl"></table></div>
+</section>
 
-## 3 · Scan History – Linked List & Undo Stack
+<section id="t7">
+<h2>8 · Hash Table (Reference colours & Flags)</h2>
+<span class="tag">Unit 4: Set, Map, Dictionary</span><span class="tag">Unit 5: Chaining, Linear probing</span>
+<p><small>Reference dictionary uses separate chaining (7 buckets, h = Σchar mod 7). The flagged-IDs Set below uses linear probing (size 11).</small></p>
+<div class="box" id="hview"></div>
+<div class="row"><input id="fid" type="number" placeholder="ID to flag" style="width:130px"><button class="b" id="flagbtn">Add to flagged set</button></div>
+<div class="box" id="pview"></div>
+</section>
 
-Unit 2: Singly Linked List, Stack
+<section id="t8">
+<h2>Syllabus mapping & complexity</h2>
+<div class="scroll"><table>
+<tr><th>Unit</th><th>Concept</th><th>Used in</th><th>Complexity</th></tr>
+<tr><td>1</td><td>ADT, space/time</td><td>Every structure as class</td><td>—</td></tr>
+<tr><td>2</td><td>Linked list</td><td>Scan history</td><td>Insert O(1) tail ptr, delete tail O(n)</td></tr>
+<tr><td>2</td><td>Stack</td><td>Undo, postfix</td><td>Push/Pop O(1)</td></tr>
+<tr><td>2</td><td>Priority queue</td><td>Critical-first processing</td><td>O(log n)</td></tr>
+<tr><td>3</td><td>BST</td><td>Patient ID index</td><td>Avg O(log n), worst O(n)</td></tr>
+<tr><td>3</td><td>Graph BFS/DFS</td><td>Condition inference</td><td>O(V+E)</td></tr>
+<tr><td>4</td><td>Map / Set</td><td>Reference table, flags</td><td>Avg O(1)</td></tr>
+<tr><td>5</td><td>Sorting / Hashing</td><td>Records, collision handling</td><td>See tab 7 / 8</td></tr>
+</table></div>
+</section>
+</main>
 
-**History (linked list)**
+<script>
+const $=id=>document.getElementById(id);
+const tabs=["Scan","Queue","History","Score","BST","Graph","Sort","Hash","Mapping"];
+tabs.forEach((t,i)=>{const b=document.createElement("button");b.textContent=t;if(!i)b.className="on";b.onclick=()=>{document.querySelectorAll("section").forEach(s=>s.classList.remove("on"));$("t"+i).classList.add("on");[...$("nav").children].forEach(x=>x.classList.remove("on"));b.classList.add("on");refresh()};$("nav").appendChild(b)});
 
-**Undo stack (LIFO)**
+/* ---------- Reference data & HashMap with chaining ---------- */
+const REF={
+Glucose:[["Negative",[120,190,200]],["100 mg/dL",[140,170,120]],["250 mg/dL",[150,130,80]],["1000 mg/dL",[120,80,50]]],
+Protein:[["Negative",[225,225,120]],["Trace",[190,215,120]],["30 mg/dL",[150,200,140]],["300 mg/dL",[90,170,160]]],
+Ketone:[["Negative",[240,200,170]],["Trace",[230,170,160]],["15 mg/dL",[200,120,140]],["80 mg/dL",[130,60,110]]],
+Blood:[["Negative",[235,200,90]],["Low",[170,190,90]],["Moderate",[100,160,90]],["High",[40,110,80]]],
+pH:[["pH 5",[240,150,70]],["pH 6",[220,170,60]],["pH 7",[150,170,80]],["pH 8",[70,140,120]]],
+Nitrite:[["Negative",[250,245,230]],["Positive",[250,190,200]],["Strong +",[230,100,150]]]};
+class HashMap{constructor(n=7){this.n=n;this.b=Array.from({length:n},()=>[])}
+h(k){let s=0;for(const c of k)s+=c.charCodeAt(0);return s%this.n}
+put(k,v){const b=this.b[this.h(k)];const e=b.find(x=>x[0]==k);e?e[1]=v:b.push([k,v])}
+get(k){const e=this.b[this.h(k)].find(x=>x[0]==k);return e&&e[1]}}
+const map=new HashMap();for(const k in REF)map.put(k,REF[k]);
+const LET={G:"Glucose",P:"Protein",K:"Ketone",B:"Blood",H:"pH",N:"Nitrite"};
 
-## 4 · Health Score – Postfix Evaluation
+function classify(param,rgb){const lv=map.get(param);let best=0,bd=1e9;
+ lv.forEach((l,i)=>{const d=Math.hypot(l[1][0]-rgb[0],l[1][1]-rgb[1],l[1][2]-rgb[2]);if(d<bd){bd=d;best=i}});
+ let sev=best; if(param=="pH")sev=Math.abs(best-1)>1?2:(best==1||best==2?0:1); 
+ return{label:lv[best][0],level:best,sev:Math.min(sev,3),dist:bd}}
+const hex=r=>"#"+r.map(v=>Math.round(v).toString(16).padStart(2,"0")).join("");
+const unhex=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
 
-Unit 2: Stack applications, Infix→Postfix, Evaluation
+/* ---------- Data structures ---------- */
+class LNode{constructor(d){this.d=d;this.next=null}}
+class LinkedList{constructor(){this.head=null;this.size=0}
+add(d){const n=new LNode(d);if(!this.head)this.head=n;else{let c=this.head;while(c.next)c=c.next;c.next=n}this.size++}
+delHead(){if(!this.head)return null;const d=this.head.d;this.head=this.head.next;this.size--;return d}
+delTail(){if(!this.head)return null;if(!this.head.next)return this.delHead();let c=this.head;while(c.next.next)c=c.next;const d=c.next.d;c.next=null;this.size--;return d}
+toArray(){const a=[];for(let c=this.head;c;c=c.next)a.push(c.d);return a}}
+class Stack{constructor(){this.a=[]}push(x){this.a.push(x)}pop(){return this.a.pop()}peek(){return this.a[this.a.length-1]}empty(){return!this.a.length}}
+class MaxHeap{constructor(){this.a=[]}
+push(x){const a=this.a;a.push(x);let i=a.length-1;while(i>0){const p=(i-1)>>1;if(a[p].score>=a[i].score)break;[a[p],a[i]]=[a[i],a[p]];i=p}}
+pop(){const a=this.a;if(!a.length)return null;const t=a[0],l=a.pop();if(a.length){a[0]=l;let i=0;for(;;){let m=i,L=2*i+1,R=L+1;if(L<a.length&&a[L].score>a[m].score)m=L;if(R<a.length&&a[R].score>a[m].score)m=R;if(m==i)break;[a[m],a[i]]=[a[i],a[m]];i=m}}return t}}
+class BNode{constructor(k,d){this.k=k;this.d=d;this.l=this.r=null}}
+class BST{constructor(){this.root=null}
+insert(k,d){const n=new BNode(k,d);if(!this.root){this.root=n;return}let c=this.root;for(;;){if(k<c.k){if(!c.l){c.l=n;return}c=c.l}else{if(!c.r){c.r=n;return}c=c.r}}}
+search(k){let c=this.root,steps=[];while(c){steps.push(c.k);if(k==c.k)return{n:c,steps};c=k<c.k?c.l:c.r}return{n:null,steps}}
+order(t){const o=[];const f=n=>{if(!n)return;if(t=="pre")o.push(n.k);f(n.l);if(t=="in")o.push(n.k);f(n.r);if(t=="post")o.push(n.k)};f(this.root);return o}
+draw(n=this.root,d=0,p="",out=[]){if(!n)return out;this.draw(n.r,d+1,"R:",out);out.push("    ".repeat(d)+p+n.k+" ("+n.d.name+")");this.draw(n.l,d+1,"L:",out);return out}}
+/* Graph: adjacency list */
+const G={Glucose:["Ketone","Diabetes"],Ketone:["Diabetes","Ketoacidosis"],Protein:["Kidney disease"],Blood:["UTI","Kidney stones"],Nitrite:["UTI"],pH:["Kidney stones","UTI"],
+Diabetes:["Ketoacidosis"],UTI:["Kidney disease"],"Kidney stones":[],"Kidney disease":[],Ketoacidosis:[]};
+function bfs(starts){const seen=new Map(),q=[];starts.forEach(s=>{seen.set(s,0);q.push(s)});while(q.length){const u=q.shift();for(const v of G[u])if(!seen.has(v)){seen.set(v,seen.get(u)+1);q.push(v)}}return seen}
+function dfs(starts){const seen=[],vis=new Set();const go=u=>{vis.add(u);seen.push(u);G[u].forEach(v=>{if(!vis.has(v))go(v)})};starts.forEach(s=>{if(!vis.has(s))go(s)});return seen}
 
-Letters: G=Glucose, P=Protein, K=Ketone, B=Blood, H=pH deviation, N=Nitrite (severity levels 0–3). Edit the formula; it's converted with a stack (shunting-yard) and evaluated with another stack.
+/* Postfix */
+const prec={"+":1,"-":1,"*":2,"/":2};
+function toPostfix(s){const out=[],st=new Stack();const tk=s.match(/[A-Z]|\d+(\.\d+)?|[()+\-*/]/g)||[];
+ for(const t of tk){if(/[A-Z\d]/.test(t))out.push(t);else if(t=="(")st.push(t);else if(t==")"){while(!st.empty()&&st.peek()!="(")out.push(st.pop());st.pop()}
+ else{while(!st.empty()&&st.peek()!="("&&prec[st.peek()]>=prec[t])out.push(st.pop());st.push(t)}}
+ while(!st.empty())out.push(st.pop());return out}
+function evalPostfix(pf,vars){const st=new Stack();for(const t of pf){if(/^[A-Z]$/.test(t))st.push(vars[t]||0);else if(/^\d/.test(t))st.push(+t);else{const b=st.pop(),a=st.pop();st.push(t=="+"?a+b:t=="-"?a-b:t=="*"?a*b:a/b)}}return st.pop()}
+function score(r){const v={G:r.Glucose.sev,P:r.Protein.sev,K:r.Ketone.sev,B:r.Blood.sev,H:r.pH.sev,N:r.Nitrite.sev};return{v,pf:toPostfix($("formula").value),sc:evalPostfix(toPostfix($("formula").value),v)}}
 
-## 5 · Patient Index – Binary Search Tree
+/* Sorting */
+function bubble(a,k){a=[...a];let c=0;for(let i=0;i<a.length;i++)for(let j=0;j<a.length-i-1;j++){c++;if(a[j][k]>a[j+1][k])[a[j],a[j+1]]=[a[j+1],a[j]]}return[a,c]}
+function counting(a,k){if(!a.length)return[a,0];const mx=Math.max(...a.map(x=>x[k])),mn=Math.min(...a.map(x=>x[k]));if(mx-mn>5000)return bubble(a,k);const cnt=Array(mx-mn+1).fill(0);a.forEach(x=>cnt[x[k]-mn]++);for(let i=1;i<cnt.length;i++)cnt[i]+=cnt[i-1];const o=Array(a.length);for(let i=a.length-1;i>=0;i--)o[--cnt[a[i][k]-mn]]=a[i];return[o,a.length+cnt.length]}
+function heapsort(a,k){a=[...a];let c=0;const n=a.length;const sift=(i,n)=>{for(;;){let m=i,l=2*i+1,r=l+1;if(l<n&&a[l][k]>a[m][k])m=l;if(r<n&&a[r][k]>a[m][k])m=r;c++;if(m==i)return;[a[m],a[i]]=[a[i],a[m]];i=m}};for(let i=(n>>1)-1;i>=0;i--)sift(i,n);for(let e=n-1;e>0;e--){[a[0],a[e]]=[a[e],a[0]];sift(0,e)}return[a,c]}
 
-Unit 3: BST, Traversals, SearchUnit 5: Binary search
+/* Linear-probing Set */
+const PS=Array(11).fill(null);let pCol=0;
+function pAdd(k){let i=k%11,t=0;while(PS[i]!==null&&PS[i]!==k&&t<11){i=(i+1)%11;t++;pCol++}if(t<11)PS[i]=k}
 
-**Tree shape** (root at top, indented)
+/* ---------- App state ---------- */
+const heap=new MaxHeap(),hist=new LinkedList(),undo=new Stack(),tree=new BST();let cur=null;
 
-```
+/* ---------- Scan UI ---------- */
+let active="Glucose";const padEl=$("pads");
+Object.keys(REF).forEach(p=>{const d=document.createElement("div");d.className="pad";
+ d.innerHTML=`<b>${p}</b><div class="sw" id="sw_${p}"></div><div id="lb_${p}"></div><span class="pk"><label><input type="radio" name="act" value="${p}" ${p==active?"checked":""}> sample here</label> <input type="color" id="c_${p}"></span>`;padEl.appendChild(d);
+ d.querySelector("input[type=color]").oninput=update;d.querySelector("input[type=radio]").onchange=()=>active=p});
+function setColors(o){for(const p in o)$("c_"+p).value=hex(o[p]);update()}
+function readings(){const r={};for(const p in REF){const rgb=unhex($("c_"+p).value);r[p]={...classify(p,rgb),rgb}}return r}
+function update(){const r=readings();let h="";for(const p in r){$("sw_"+p).style.background=hex(r[p].rgb);$("lb_"+p).innerHTML=`<span class="sev${r[p].sev}">${r[p].label}</span> <small>(Δ=${r[p].dist.toFixed(0)})</small>`}
+ const s=score(r);$("liveRes").innerHTML=`Postfix: ${s.pf.join(" ")}<br>Severity score = <b>${s.sc}</b>`}
+function demo(){const o={};for(const p in REF){const l=REF[p],i=Math.random()<.5?0:Math.floor(Math.random()*l.length);o[p]=l[i][1].map(v=>Math.max(0,Math.min(255,v+(Math.random()*20-10))))}setColors(o)}
+$("demo").onclick=()=>{demo();$("pname").value="Patient "+String.fromCharCode(65+Math.floor(Math.random()*26));$("pid").value=100+Math.floor(Math.random()*900)};
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{const cv=$("cv"),w=Math.min(520,img.width);cv.width=w;cv.height=img.height*w/img.width;cv.style.display="block";cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height)};img.src=URL.createObjectURL(f)};
+$("cv").onclick=e=>{const cv=$("cv"),b=cv.getBoundingClientRect(),x=(e.clientX-b.left)*cv.width/b.width,y=(e.clientY-b.top)*cv.height/b.height;
+ const d=cv.getContext("2d").getImageData(Math.max(0,x-2),Math.max(0,y-2),5,5).data;let r=0,g=0,bl=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];bl+=d[i+2]}const n=d.length/4;
+ $("c_"+active).value=hex([r/n,g/n,bl/n]);update();const keys=Object.keys(REF);const nx=keys[(keys.indexOf(active)+1)%keys.length];active=nx;document.querySelector(`input[value="${nx}"]`).checked=true};
+$("analyze").onclick=()=>{const r=readings(),s=score(r);const rec={id:+$("pid").value||0,name:$("pname").value||"Unknown",r,score:s.sc,time:new Date().toLocaleTimeString()};heap.push(rec);$("liveRes").innerHTML+=`<br>✔ Queued ${rec.name} (ID ${rec.id}) with priority ${rec.score}`;$("pid").value=rec.id+1;refresh()};
 
-```
+/* ---------- Other tabs ---------- */
+$("proc").onclick=()=>{const rec=heap.pop();if(!rec)return;hist.add(rec);tree.insert(rec.id,rec);undo.push({type:"proc",rec});cur=rec;refresh()};
+$("delHead").onclick=()=>{const d=hist.delHead();if(d)undo.push({type:"del",rec:d,where:"head"});refresh()};
+$("delTail").onclick=()=>{const d=hist.delTail();if(d)undo.push({type:"del",rec:d,where:"tail"});refresh()};
+$("undo").onclick=()=>{const a=undo.pop();if(!a)return;if(a.type=="proc"){const arr=hist.toArray().filter(x=>x!==a.rec);hist.head=null;hist.size=0;arr.forEach(x=>hist.add(x));rebuild();heap.push(a.rec)}
+ else{const arr=hist.toArray();a.where=="head"?arr.unshift(a.rec):arr.push(a.rec);hist.head=null;hist.size=0;arr.forEach(x=>hist.add(x));rebuild()}refresh()};
+function rebuild(){tree.root=null;hist.toArray().forEach(r=>tree.insert(r.id,r))}
+const sevName=s=>["Normal","Mild","High","Critical"][Math.min(3,s)];
+$("fbtn").onclick=refresh;
+$("bst").onclick=()=>{const k=+$("sid").value,{n,steps}=tree.search(k);$("tout").innerHTML=`Path: ${steps.join(" → ")||"(empty)"}<br>`+(n?`Found: ${n.d.name}, score ${n.d.score}`:"Not found")};
+["in","pre","post"].forEach(t=>$("t"+t).onclick=()=>$("tout").textContent=t+"order: "+tree.order(t).join(", "));
+const abn=()=>cur?Object.keys(cur.r).filter(p=>cur.r[p].sev>0):[];
+$("bfs").onclick=()=>{const a=abn();if(!cur||!a.length){$("gout").textContent=cur?"No abnormal pads – nothing to traverse.":"Process a strip first.";return}const m=bfs(a);$("gout").innerHTML="Start: "+a.join(", ")+"<br>BFS levels: "+[...m].map(([k,v])=>`${k}(L${v})`).join(" → ")};
+$("dfs").onclick=()=>{const a=abn();if(!cur||!a.length){$("gout").textContent="Process a strip with abnormal pads first.";return}$("gout").innerHTML="DFS order: "+dfs(a).join(" → ")};
+$("sortbtn").onclick=()=>{const k=$("key").value,arr=hist.toArray();const f={bubble,counting,heap:heapsort}[$("alg").value];const t=performance.now();const[o,c]=f(arr,k);$("sinfo").textContent=` ${arr.length} items, ~${c} steps, ${(performance.now()-t).toFixed(2)} ms`;
+ $("stbl").innerHTML="<tr><th>ID</th><th>Name</th><th>Score</th><th>Status</th></tr>"+o.map(r=>`<tr><td>${r.id}</td><td>${r.name}</td><td>${r.score}</td><td class="sev${Math.min(3,Math.floor(r.score/4))}">${sevName(Math.floor(r.score/4))}</td></tr>`).join("")};
+$("flagbtn").onclick=()=>{const k=+$("fid").value;if(k)pAdd(k);refresh()};
 
-## 6 · Condition Graph – BFS / DFS
-
-Unit 3: Graph, adjacency list, BFS, DFS
-
-Abnormal pads are start nodes. Traversal finds the possible conditions linked to them (graph: pad → pathway → condition).
-
-## 7 · Sort & Search Records
-
-Unit 5: Bubble, Counting, Heap sort
-
-## 8 · Hash Table (Reference colours & Flags)
-
-Unit 4: Set, Map, DictionaryUnit 5: Chaining, Linear probing
-
-Reference dictionary uses separate chaining (7 buckets, h = Σchar mod 7). The flagged-IDs Set below uses linear probing (size 11).
-
-## Syllabus mapping & complexity
-
-| Unit | Concept | Used in | Complexity |
-| --- | --- | --- | --- |
-| 1 | ADT, space/time | Every structure as class | — |
-| 2 | Linked list | Scan history | Insert O(1) tail ptr, delete tail O(n) |
-| 2 | Stack | Undo, postfix | Push/Pop O(1) |
-| 2 | Priority queue | Critical-first processing | O(log n) |
-| 3 | BST | Patient ID index | Avg O(log n), worst O(n) |
-| 3 | Graph BFS/DFS | Condition inference | O(V+E) |
-| 4 | Map / Set | Reference table, flags | Avg O(1) |
-| 5 | Sorting / Hashing | Records, collision handling | See tab 7 / 8 |
+function refresh(){update();
+ const q=[...heap.a].sort((a,b)=>b.score-a.score);$("qinfo").textContent=` ${heap.a.length} waiting`;
+ $("qview").innerHTML=q.length?q.map(r=>`<span class="node">${r.name} #${r.id} · score ${r.score}</span>`).join('<span class="arr">→</span>'):"Queue empty. Analyze a strip first.";
+ const l=hist.toArray();$("llview").innerHTML=l.length?"HEAD → "+l.map(r=>`<span class="node">${r.id}</span>`).join('<span class="arr">→</span>')+" → NULL":"Empty list";
+ $("stview").innerHTML=undo.a.length?[...undo.a].reverse().map((x,i)=>`<div>${i?"":"TOP ▶ "}${x.type=="proc"?"processed":"deleted "+x.where} #${x.rec.id}</div>`).join(""):"Empty";
+ const s=cur?score(cur.r):score(readings());$("fout").innerHTML=`Infix: ${$("formula").value}<br>Postfix: <b>${s.pf.join(" ")}</b><br>Values: ${JSON.stringify(s.v)}<br>Result: <b>${s.sc}</b> → ${sevName(Math.floor(s.sc/4))}`;
+ $("tview").textContent=tree.root?tree.draw().join("\n"):"Empty tree";
+ $("gview").innerHTML=Object.entries(G).map(([k,v])=>`${k} → ${v.join(", ")||"∅"}`).join("<br>");
+ $("hview").innerHTML=map.b.map((b,i)=>`[${i}] `+(b.map(e=>`<span class="node">${e[0]}</span>`).join("→")||"—")).join("<br>");
+ $("pview").innerHTML="Flagged set (linear probing, collisions: "+pCol+")<br>"+PS.map((v,i)=>`[${i}] ${v??"—"}`).join(" &nbsp; ")}
+setColors({Glucose:[140,170,120],Protein:[190,215,120],Ketone:[240,200,170],Blood:[235,200,90],pH:[220,170,60],Nitrite:[250,245,230]});refresh();
+</script></body></html>
